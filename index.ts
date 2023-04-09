@@ -3,6 +3,12 @@ import cors from 'cors';
 import bodyParser from 'body-parser';
 import mongoose from 'mongoose';
 import dotenv from "dotenv";
+import {
+  createCard,
+  deleteCard,
+  getAllCards,
+  updateCard,
+} from "./controllers/card.controller";
 dotenv.config({ path: ".env" });
 
 const app = express();
@@ -28,3 +34,14 @@ mongoose
   .catch((error) => {
     console.error("❌ Error connecting to MongoDB Atlas:", error);
   });
+
+app.get("/", (req: Request, res: Response) => {
+  res.send("Hello, world!");
+});
+
+app.get("/cards", getAllCards);
+app.post("/cards", createCard);
+app.put("/cards/:id", updateCard);
+app.delete("/cards/:id", deleteCard);
+
+
