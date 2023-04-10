@@ -9,6 +9,12 @@ import {
   getAllCards,
   updateCard,
 } from "./controllers/card.controller";
+import {
+  getAllDecks,
+  createDeck,
+  deleteDeck,
+  updateDeck,
+} from "./controllers/deck.controller";
 dotenv.config({ path: ".env" });
 
 const app = express();
@@ -45,3 +51,7 @@ app.put("/cards/:id", updateCard);
 app.delete("/cards/:id", deleteCard);
 
 
+app.get("/decks", getAllDecks);
+app.post("/decks", createDeck);
+app.put("/decks/:id", updateDeck);
+app.delete("/decks/:id", deleteDeck);
