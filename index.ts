@@ -15,6 +15,13 @@ import {
   deleteDeck,
   updateDeck,
 } from "./controllers/deck.controller";
+import {
+  createUser,
+  deleteUser,
+  getAllUsers,
+  getUserById,
+  updateUser,
+} from "./controllers/user.controller";
 dotenv.config({ path: ".env" });
 
 const app = express();
@@ -45,11 +52,16 @@ app.get("/", (req: Request, res: Response) => {
   res.send("Hello, world!");
 });
 
+app.post("/users", createUser);
+app.get("/users", getAllUsers);
+app.get("/users/:id", getUserById);
+app.put("/users/:id", updateUser);
+app.delete("/users/:id", deleteUser);
+
 app.get("/cards", getAllCards);
 app.post("/cards", createCard);
 app.put("/cards/:id", updateCard);
 app.delete("/cards/:id", deleteCard);
-
 
 app.get("/decks", getAllDecks);
 app.post("/decks", createDeck);
