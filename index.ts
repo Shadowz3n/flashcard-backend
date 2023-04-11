@@ -1,7 +1,7 @@
-import express, { Request, Response } from 'express';
-import cors from 'cors';
-import bodyParser from 'body-parser';
-import mongoose from 'mongoose';
+import express, { Request, Response, NextFunction } from "express";
+import cors from "cors";
+import bodyParser from "body-parser";
+import mongoose from "mongoose";
 import dotenv from "dotenv";
 import {
   createCard,
@@ -22,7 +22,25 @@ import {
   getUserById,
   updateUser,
 } from "./controllers/user.controller";
+import jwt from "jsonwebtoken";
+import { IUser, User } from "./models/user.model";
+import bcrypt from "bcrypt";
+
 dotenv.config({ path: ".env" });
+
+interface UserPayload {
+  _id: string;
+  username: string;
+  email: string;
+}
+
+declare global {
+  namespace Express {
+    interface Request {
+      user?: UserPayload;
+    }
+  }
+}
 
 const app = express();
 
@@ -51,19 +69,69 @@ mongoose
 app.get("/", (req: Request, res: Response) => {
   res.send("Hello, world!");
 });
+const secret = "mysecretkey";
+
+app.post("/login", async (req: Request, res: Response) => {
+  const user = await User.findOne({ username: req.body.username });
+  if (!user) {
+    return res.sendStatus(401);
+  }
+  const isValidPassword = req.body.password === user.password;
+
+  if (!isValidPassword) {
+    return res.sendStatus(401);
+  }
+  const token = generateToken(user);
+
+  res.json({ token });
+});
+
+function generateToken(user: IUser) {
+  const payload = {
+    id: user.id,
+    username: user.username,
+  };
+
+  const options = {
+    expiresIn: "1h",
+  };
+
+  return jwt.sign(payload, secret, options);
+}
+
+function verifyToken(req: Request, res: Response, next: NextFunction) {
+  const authHeader = req.headers.authorization;
+
+  console.log("authHeader", authHeader);
+
+  if (authHeader) {
+    const token = authHeader.split(" ")[1];
+
+    jwt.verify(token, secret, (err, user) => {
+      if (err) {
+        return res.sendStatus(403);
+      }
+
+      req.user = user as UserPayload;
+      next();
+    });
+  } else {
+    res.sendStatus(401);
+  }
+}
 
 app.post("/users", createUser);
-app.get("/users", getAllUsers);
-app.get("/users/:id", getUserById);
-app.put("/users/:id", updateUser);
-app.delete("/users/:id", deleteUser);
+app.get("/users", verifyToken, getAllUsers);
+app.get("/users/:id", verifyToken, getUserById);
+app.put("/users/:id", verifyToken, updateUser);
+app.delete("/users/:id", verifyToken, deleteUser);
 
-app.get("/cards", getAllCards);
-app.post("/cards", createCard);
-app.put("/cards/:id", updateCard);
-app.delete("/cards/:id", deleteCard);
+app.get("/cards", verifyToken, getAllCards);
+app.post("/cards", verifyToken, createCard);
+app.put("/cards/:id", verifyToken, updateCard);
+app.delete("/cards/:id", verifyToken, deleteCard);
 
-app.get("/decks", getAllDecks);
-app.post("/decks", createDeck);
-app.put("/decks/:id", updateDeck);
-app.delete("/decks/:id", deleteDeck);
+app.get("/decks", verifyToken, getAllDecks);
+app.post("/decks", verifyToken, createDeck);
+app.put("/decks/:id", verifyToken, updateDeck);
+app.delete("/decks/:id", verifyToken, deleteDeck);
