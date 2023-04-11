@@ -102,8 +102,6 @@ function generateToken(user: IUser) {
 function verifyToken(req: Request, res: Response, next: NextFunction) {
   const authHeader = req.headers.authorization;
 
-  console.log("authHeader", authHeader);
-
   if (authHeader) {
     const token = authHeader.split(" ")[1];
 
