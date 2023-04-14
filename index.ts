@@ -26,6 +26,7 @@ import jwt from "jsonwebtoken";
 import { IUser, User } from "./models/user.model";
 import bcrypt from "bcrypt";
 
+const secret = "mysecretkey";
 dotenv.config({ path: ".env" });
 
 interface UserPayload {
@@ -48,7 +49,6 @@ const PORT = process.env.PORT || 3000;
 const MONGO_USER = process.env.MONGO_USER;
 const MONGO_PASSWORD = process.env.MONGO_PASSWORD;
 
-// Middleware
 app.use(cors());
 app.use(bodyParser.json());
 
@@ -66,10 +66,6 @@ mongoose
     console.error("❌ Error connecting to MongoDB Atlas:", error);
   });
 
-app.get("/", (req: Request, res: Response) => {
-  res.send("Hello, world!");
-});
-const secret = "mysecretkey";
 
 app.post("/login", async (req: Request, res: Response) => {
   const user = await User.findOne({ username: req.body.username });

@@ -1,0 +1,4 @@
+name = "flashcard-backend"
+main = "./index.ts"
+compatibility_date = "2023-04-11"
+node_compat = true
