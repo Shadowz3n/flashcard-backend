@@ -67,65 +67,72 @@ mongoose
   });
 
 
-app.post("/login", async (req: Request, res: Response) => {
-  const user = await User.findOne({ username: req.body.username });
-  if (!user) {
-    return res.sendStatus(401);
+  
+  function generateToken(user: IUser) {
+    const payload = {
+      id: user.id,
+      username: user.username,
+    };
+
+    const options = {
+      expiresIn: "1h",
+    };
+
+    return jwt.sign(payload, secret, options);
   }
-  const isValidPassword = req.body.password === user.password;
 
-  if (!isValidPassword) {
-    return res.sendStatus(401);
+  function verifyToken(req: Request, res: Response, next: NextFunction) {
+    const authHeader = req.headers.authorization;
+
+    if (authHeader) {
+      const token = authHeader.split(" ")[1];
+
+      jwt.verify(token, secret, (err, user) => {
+        if (err) {
+          return res.sendStatus(403);
+        }
+
+        req.user = user as UserPayload;
+        next();
+      });
+    } else {
+      res.sendStatus(401);
+    }
   }
-  const token = generateToken(user);
 
-  res.json({ token });
-});
+  app.post("/login", async (req: Request, res: Response) => {
+    const user = await User.findOne({ username: req.body.username });
+    if (!user) {
+      return res.sendStatus(401);
+    }
+    const isValidPassword = req.body.password === user.password;
 
-function generateToken(user: IUser) {
-  const payload = {
-    id: user.id,
-    username: user.username,
-  };
+    if (!isValidPassword) {
+      return res.sendStatus(401);
+    }
+    const token = generateToken(user);
 
-  const options = {
-    expiresIn: "1h",
-  };
-
-  return jwt.sign(payload, secret, options);
-}
-
-function verifyToken(req: Request, res: Response, next: NextFunction) {
-  const authHeader = req.headers.authorization;
-
-  if (authHeader) {
-    const token = authHeader.split(" ")[1];
-
-    jwt.verify(token, secret, (err, user) => {
-      if (err) {
-        return res.sendStatus(403);
-      }
-
-      req.user = user as UserPayload;
-      next();
+    res.json({ token });
+  });
+  app.post("/logout", (req: Request, res: Response) => {
+    const expiredToken = jwt.sign({ id: "", username: "" }, secret, {
+      expiresIn: 0,
     });
-  } else {
-    res.sendStatus(401);
-  }
-}
+    res.cookie("token", expiredToken, { httpOnly: true, expires: new Date(0) });
+    res.sendStatus(200);
+  });
+  app.post("/users", createUser);
+  app.get("/api/users", verifyToken, getAllUsers);
+  app.get("/api/users/:id", verifyToken, getUserById);
+  app.put("/api/users/:id", verifyToken, updateUser);
+  app.delete("/api/users/:id", verifyToken, deleteUser);
 
-app.post("/users", createUser);
-app.get("/users", verifyToken, getAllUsers);
-app.get("/users/:id", verifyToken, getUserById);
-app.put("/users/:id", verifyToken, updateUser);
-app.delete("/users/:id", verifyToken, deleteUser);
+app.get("/api/cards", verifyToken, getAllCards);
+app.post("/api/cards", verifyToken, createCard);
+app.put("/api/cards/:id", verifyToken, updateCard);
+app.delete("/api/cards/:id", verifyToken, deleteCard);
 
-app.get("/cards", verifyToken, getAllCards);
-app.post("/cards", verifyToken, createCard);
-app.put("/cards/:id", verifyToken, updateCard);
-app.delete("/cards/:id", verifyToken, deleteCard);
-
-app.get("/decks", verifyToken, getAllDecks);
-app.post("/decks", verifyToken, createDeck);
-app.put("/decks/:id", verifyToken, updateDeck);
-app.delete("/decks/:id", verifyToken, deleteDeck);
+app.get("/api/decks", verifyToken, getAllDecks);
+app.post("/api/decks", verifyToken, createDeck);
+app.put("/api/decks/:id", verifyToken, updateDeck);
+app.delete("/api/decks/:id", verifyToken, deleteDeck);
