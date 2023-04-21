@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { Card, ICard } from "../models/card.model";
+import { Deck } from "../models/deck.model";
 
 export const getAllCards = async (
   req: Request,
@@ -18,8 +19,25 @@ export const createCard = async (
   res: Response
 ): Promise<void> => {
   try {
-    const card: ICard = new Card(req.body);
+    const { deckId, question, answer } = req.body;
+    const deck = await Deck.findById(deckId);
+    if (!deck) {
+      res.status(404).json({ error: "Deck not found" });
+      return;
+    }
+    // console.log("deck OK", deck);
+    const card: ICard = new Card({ deckId, question, answer });
     const newCard: ICard = await card.save();
+    console.log("newCard ok", newCard);
+
+    deck.cards.push(newCard._id);
+    console.log("deck", deck);
+    try {
+      await deck.save();
+    } catch (error) {
+      console.log("error", error);
+    }
+
     res.status(201).json(newCard);
   } catch (err) {
     res.status(500).send(err);
@@ -36,7 +54,11 @@ export const updateCard = async (
       req.body,
       { new: true }
     ).exec();
-    res.status(200).json(updatedCard);
+    if (updatedCard) {
+      res.status(200).json(updatedCard);
+    } else {
+      res.status(404).send("Card not found");
+    }
   } catch (err) {
     res.status(500).send(err);
   }
@@ -50,8 +72,13 @@ export const deleteCard = async (
     const deletedCard: ICard | null = await Card.findByIdAndDelete(
       req.params.id
     ).exec();
-    res.status(200).json(deletedCard);
+    if (deletedCard) {
+      res.status(200).json(deletedCard);
+    } else {
+      res.status(404).send("Card not found");
+    }
   } catch (err) {
     res.status(500).send(err);
   }
 };
+

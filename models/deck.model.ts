@@ -1,32 +1,31 @@
 import mongoose, { Document, Schema } from "mongoose";
-import { ICard, cardSchema } from "./card.model";
 
 export interface IDeck extends Document {
-  name: string;
+  title: string;
   description: string;
-  cards: ICard[];
-  dateCreated: Date;
-  lastModified: Date;
+  createdAt: Date;
+  updatedAt: Date;
+  cards: string[];
 }
 
-const deckSchema: Schema = new mongoose.Schema({
-  name: {
+export const deckSchema: Schema = new mongoose.Schema({
+  title: {
     type: String,
-    required: [true, "Name field is required."],
-    minlength: [1, "Name cannot be an empty string."],
+    required: [true, "Title field is required."],
+    minlength: [1, "Title cannot be an empty string."],
   },
   description: {
     type: String,
     required: [true, "Description field is required."],
     minlength: [1, "Description cannot be an empty string."],
   },
-  cards: [cardSchema],
-  dateCreated: {
+  cards: [],
+  createdAt: {
     type: Date,
     default: Date.now,
     required: [true, "Date field is required."],
   },
-  lastModified: { type: Date, default: Date.now },
+  updatedAt: { type: Date, default: Date.now },
 });
 
 export const Deck = mongoose.model<IDeck>("Deck", deckSchema);

@@ -18,7 +18,12 @@ export const createDeck = async (
   res: Response
 ): Promise<void> => {
   try {
-    const deck: IDeck = new Deck(req.body);
+    const deck: IDeck = new Deck({
+      title: req.body.title,
+      description: req.body.description,
+      collectionId: req.body.collectionId,
+      cards: [],
+    });
 
     const newDeck: IDeck = await deck.save();
     res.status(201).json(newDeck);
