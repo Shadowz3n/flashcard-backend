@@ -25,19 +25,11 @@ export const createCard = async (
       res.status(404).json({ error: "Deck not found" });
       return;
     }
-    // console.log("deck OK", deck);
     const card: ICard = new Card({ deckId, question, answer });
     const newCard: ICard = await card.save();
-    console.log("newCard ok", newCard);
 
     deck.cards.push(newCard._id);
-    console.log("deck", deck);
-    try {
-      await deck.save();
-    } catch (error) {
-      console.log("error", error);
-    }
-
+    await deck.save();
     res.status(201).json(newCard);
   } catch (err) {
     res.status(500).send(err);
