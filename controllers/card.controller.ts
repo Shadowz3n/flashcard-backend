@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import { Card, ICard } from "../models/card.model";
 import { Deck } from "../models/deck.model";
+import { Document } from "mongoose";
+import { IDeck } from "../models/deck.model";
 
 export const getAllCards = async (
   req: Request,
@@ -13,6 +15,26 @@ export const getAllCards = async (
     res.status(500).send(err);
   }
 };
+
+export const getAllCardsByDeckId = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { deckId } = req.params;
+    const deck = await Deck.findById(deckId).lean().exec();
+    if (!deck) {
+      res.status(404).json({ error: "Deck not found" });
+      return;
+    }
+    const cardIds = deck.cards;
+    const cards = await Card.find({ _id: { $in: cardIds } }).exec();
+    res.status(200).json(cards);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+};
+
 
 export const createCard = async (
   req: Request,
