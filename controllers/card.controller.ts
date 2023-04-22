@@ -29,7 +29,11 @@ export const getAllCardsByDeckId = async (
     }
     const cardIds = deck.cards;
     const cards = await Card.find({ _id: { $in: cardIds } }).exec();
-    res.status(200).json(cards);
+
+    const deckTitle = deck.title;
+    const deckDescription = deck.description;
+
+    res.status(200).json({ deckTitle, deckDescription, cards });
   } catch (err) {
     res.status(500).send(err);
   }
