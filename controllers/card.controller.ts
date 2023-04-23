@@ -91,6 +91,22 @@ export const deleteCard = async (
       req.params.id
     ).exec();
     if (deletedCard) {
+      const deckId = deletedCard.deckId;
+      const cardId = deletedCard._id;
+
+      const deck = await Deck.findById(deckId);
+      console.log("deck", deck);
+      if (!deck) {
+        res.status(404).send("Deck not found");
+        return;
+      }
+      await Deck.updateMany(
+        { cards: deletedCard._id },
+        { $pull: { cards: deletedCard._id } }
+      ).exec();
+
+
+
       res.status(200).json(deletedCard);
     } else {
       res.status(404).send("Card not found");
