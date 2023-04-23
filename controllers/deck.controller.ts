@@ -75,7 +75,6 @@ export const getRandomCardsFromDeck = async (
 ): Promise<void> => {
   try {
     const { deckId, quantity } = req.params;
-    console.log("deckId, quantity", deckId, quantity);
 
     const deck = await Deck.findById(deckId).exec();
     if (!deck) {
@@ -86,7 +85,6 @@ export const getRandomCardsFromDeck = async (
       let selectedCards: ICard[] = [];
 
       if (cards.length <= parseInt(quantity, 10)) {
-        // Select all cards if there are less cards in the deck than the requested quantity
         selectedCards = await Promise.all(
           cards.map(async (cardId) => {
             const card = await Card.findById(cardId).exec();
@@ -97,7 +95,6 @@ export const getRandomCardsFromDeck = async (
           })
         );
       } else {
-        // Select a random subset of the cards
         const shuffledCards = cards.sort(() => 0.5 - Math.random());
         selectedCards = await Promise.all(
           shuffledCards.slice(0, parseInt(quantity, 10)).map(async (cardId) => {
