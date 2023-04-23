@@ -15,6 +15,7 @@ import {
   createDeck,
   deleteDeck,
   updateDeck,
+  getRandomCardsFromDeck,
 } from "./controllers/deck.controller";
 import {
   createUser,
@@ -140,3 +141,8 @@ app.get("/api/decks", verifyToken, getAllDecks);
 app.post("/api/decks", verifyToken, createDeck);
 app.put("/api/decks/:id", verifyToken, updateDeck);
 app.delete("/api/decks/:id", verifyToken, deleteDeck);
+app.get(
+  "/api/decks/:deckId/cards/random/:quantity",
+  verifyToken,
+  getRandomCardsFromDeck
+);

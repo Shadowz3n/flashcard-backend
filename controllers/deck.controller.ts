@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
 import { Deck, IDeck } from "../models/deck.model";
-import { Card } from "../models/card.model";
+import { Card, ICard } from "../models/card.model";
 
 export const getAllDecks = async (
   req: Request,
@@ -66,5 +66,54 @@ export const deleteDeck = async (
     }
   } catch (err) {
     res.status(500).send(err);
+  }
+};
+
+export const getRandomCardsFromDeck = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { deckId, quantity } = req.params;
+    console.log("deckId, quantity", deckId, quantity);
+
+    const deck = await Deck.findById(deckId).exec();
+    if (!deck) {
+      res.status(404).send("Deck not found");
+    } else {
+      const cards = deck.cards;
+
+      let selectedCards: ICard[] = [];
+
+      if (cards.length <= parseInt(quantity, 10)) {
+        // Select all cards if there are less cards in the deck than the requested quantity
+        selectedCards = await Promise.all(
+          cards.map(async (cardId) => {
+            const card = await Card.findById(cardId).exec();
+            if (!card) {
+              throw new Error(`Card with id ${cardId} not found`);
+            }
+            return card;
+          })
+        );
+      } else {
+        // Select a random subset of the cards
+        const shuffledCards = cards.sort(() => 0.5 - Math.random());
+        selectedCards = await Promise.all(
+          shuffledCards.slice(0, parseInt(quantity, 10)).map(async (cardId) => {
+            const card = await Card.findById(cardId).exec();
+            if (!card) {
+              throw new Error(`Card with id ${cardId} not found`);
+            }
+            return card;
+          })
+        );
+      }
+
+      res.status(200).json(selectedCards);
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server error");
   }
 };

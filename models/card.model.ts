@@ -40,7 +40,7 @@ export const cardSchema: Schema = new mongoose.Schema({
 
   createdAt: { type: Date, default: Date.now },
 
-  updatedAt: { type: Date },
+  updatedAt: { type: Date, default: Date.now },
 
   isFavorite: { type: Boolean, default: false },
 });
