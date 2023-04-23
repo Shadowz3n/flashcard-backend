@@ -95,7 +95,6 @@ export const deleteCard = async (
       const cardId = deletedCard._id;
 
       const deck = await Deck.findById(deckId);
-      console.log("deck", deck);
       if (!deck) {
         res.status(404).send("Deck not found");
         return;
