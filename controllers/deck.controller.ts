@@ -1,5 +1,6 @@
 import { Request, Response } from "express";
 import { Deck, IDeck } from "../models/deck.model";
+import { Card } from "../models/card.model";
 
 export const getAllDecks = async (
   req: Request,
@@ -56,7 +57,13 @@ export const deleteDeck = async (
     const deletedDeck: IDeck | null = await Deck.findByIdAndDelete(
       req.params.id
     ).exec();
-    res.status(200).json(deletedDeck);
+
+    if (deletedDeck) {
+      await Card.deleteMany({ deckId: deletedDeck._id });
+      res.status(200).json(deletedDeck);
+    } else {
+      res.status(404).send("Deck not found");
+    }
   } catch (err) {
     res.status(500).send(err);
   }
