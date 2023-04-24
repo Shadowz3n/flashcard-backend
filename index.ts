@@ -22,6 +22,7 @@ import {
   deleteUser,
   getAllUsers,
   getUserById,
+  updateCardDifficulty,
   updateUser,
 } from "./controllers/user.controller";
 import jwt from "jsonwebtoken";
@@ -128,6 +129,7 @@ app.get("/api/users", verifyToken, getAllUsers);
 app.get("/api/users/:id", verifyToken, getUserById);
 app.put("/api/users/:id", verifyToken, updateUser);
 app.delete("/api/users/:id", verifyToken, deleteUser);
+app.put("/api/users/:id/progress", verifyToken, updateCardDifficulty);
 
 // card routes
 app.get("/api/cards", verifyToken, getAllCards);

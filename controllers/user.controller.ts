@@ -11,6 +11,7 @@ export const createUser = async (
       username,
       email,
       password,
+      cards: [],
     });
     const savedUser = await user.save();
     res.json(savedUser);
@@ -48,13 +49,14 @@ export const updateUser = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { username, email, password } = req.body;
+    const { username, email, password, cards } = req.body;
     const updatedUser = await User.findByIdAndUpdate(
       req.params.id,
       {
         username,
         email,
         password,
+        cards,
       },
       { new: true }
     );
@@ -75,3 +77,49 @@ export const deleteUser = async (
     res.status(400).json({ error: error });
   }
 };
+
+export const updateCardDifficulty = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { userDifficulty, userId, cardId } = req.body;
+
+    const user: IUser | null = await User.findById(userId);
+    console.log("user", user);
+    if (!user) {
+      throw new Error("User not found.");
+    }
+
+    const cardIndex = user.cards.findIndex(
+      (card) => card.cardId.toString() === cardId
+    );
+    console.log("cardIndex", cardIndex);
+
+    if (cardIndex === -1) {
+      user.cards.push({
+        cardId: cardId,
+        history: [
+          {
+            date: new Date(),
+            userDifficulty: userDifficulty,
+          },
+        ],
+      });
+    } else {
+      user.cards[cardIndex].history.push({
+        date: new Date(),
+        userDifficulty: userDifficulty,
+      });
+    }
+
+    await user.save();
+    res.json(user);
+  } catch (error) {
+    res.status(400).json({ error: error });
+  }
+};
+
+
+
+
