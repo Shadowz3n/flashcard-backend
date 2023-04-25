@@ -76,7 +76,7 @@ export const getRandomCardsFromDeck = async (
 ): Promise<void> => {
   try {
     const { deckId, quantity } = req.params;
-    const { userId } = req.body;
+    const userId = req.user?.id;
 
     const deck = await Deck.findById(deckId).exec();
     if (!deck) {

@@ -25,7 +25,7 @@ import {
   updateCardDifficulty,
   updateUser,
 } from "./controllers/user.controller";
-import jwt from "jsonwebtoken";
+import jwt, { JwtPayload, decode } from "jsonwebtoken";
 import { IUser, User } from "./models/user.model";
 import bcrypt from "bcrypt";
 
@@ -33,7 +33,7 @@ const secret = "mysecretkey";
 dotenv.config({ path: ".env" });
 
 interface UserPayload {
-  _id: string;
+  id: string;
   username: string;
   email: string;
 }
@@ -42,6 +42,7 @@ declare global {
   namespace Express {
     interface Request {
       user?: UserPayload;
+      userId: string;
     }
   }
 }
@@ -76,7 +77,7 @@ function generateToken(user: IUser) {
   };
 
   const options = {
-    expiresIn: "5h",
+    // expiresIn: "5h",
   };
 
   return jwt.sign(payload, secret, options);
@@ -89,12 +90,13 @@ function verifyToken(req: Request, res: Response, next: NextFunction) {
     const token = authHeader.split(" ")[1];
 
     jwt.verify(token, secret, (err, user) => {
-      req.user = user as UserPayload;
+      if (err) {
+        return res.sendStatus(403);
+      }
+      if (typeof user !== "string") {
+        req.user = user as UserPayload;
+      }
       next();
-      // if (err) {
-      //   console.log("someone is trying to access", authHeader, token, secret);
-      //   return res.sendStatus(403);
-      // }
     });
   } else {
     res.sendStatus(401);

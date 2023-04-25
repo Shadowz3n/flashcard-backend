@@ -83,10 +83,11 @@ export const updateCardDifficulty = async (
   res: Response
 ): Promise<void> => {
   try {
-    const { userDifficulty, userId, cardId } = req.body;
+    const cardId = req.params.id;
+    const { userDifficulty } = req.body;
+    const userId = req.user?.id;
 
     const user: IUser | null = await User.findById(userId);
-    console.log("user", user);
     if (!user) {
       throw new Error("User not found.");
     }
@@ -94,7 +95,6 @@ export const updateCardDifficulty = async (
     const cardIndex = user.cards.findIndex(
       (card) => card.cardId.toString() === cardId
     );
-    console.log("cardIndex", cardIndex);
 
     if (cardIndex === -1) {
       user.cards.push({

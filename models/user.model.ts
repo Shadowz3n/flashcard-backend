@@ -8,7 +8,7 @@ export interface IUser extends mongoose.Document {
 }
 
 export interface IUserCard {
-  cardId: ObjectId;
+  cardId: string;
   history: {
     date: Date;
     userDifficulty: number;
