@@ -119,7 +119,7 @@ export const getRandomCardsFromDeck = async (
       }
 
       const currentDate = new Date();
-      selectedCards.map((card) => {
+      selectedCards = selectedCards.map((card) => {
         const userCard = user.cards.find(
           (userCard) => userCard.cardId.toString() === card._id.toString()
         );
@@ -133,8 +133,14 @@ export const getRandomCardsFromDeck = async (
           } else {
             card.userDifficulty = 0;
           }
+        } else {
+          card.userDifficulty = 0;
         }
+
+        return card;
       });
+
+      await user.save();
     }
 
     const response = selectedCards;
@@ -144,4 +150,5 @@ export const getRandomCardsFromDeck = async (
     res.status(500).send("Server error");
   }
 };
+
 
