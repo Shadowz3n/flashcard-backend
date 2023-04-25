@@ -32,12 +32,13 @@ export const getAllUsers = async (
   }
 };
 
-export const getUserById = async (
+export const getUserSelfInfo = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
-    const user = await User.findById(req.params.id);
+    const userId = req.user?.id;
+    const user = await User.findById(userId);
     res.json(user);
   } catch (error) {
     res.status(400).json({ error: error });

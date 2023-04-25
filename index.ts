@@ -21,7 +21,7 @@ import {
   createUser,
   deleteUser,
   getAllUsers,
-  getUserById,
+  getUserSelfInfo,
   updateCardDifficulty,
   updateUser,
 } from "./controllers/user.controller";
@@ -88,7 +88,6 @@ function verifyToken(req: Request, res: Response, next: NextFunction) {
 
   if (authHeader) {
     const token = authHeader.split(" ")[1];
-
     jwt.verify(token, secret, (err, user) => {
       if (err) {
         return res.sendStatus(403);
@@ -96,6 +95,7 @@ function verifyToken(req: Request, res: Response, next: NextFunction) {
       if (typeof user !== "string") {
         req.user = user as UserPayload;
       }
+      console.log("token", token);
       next();
     });
   } else {
@@ -128,7 +128,7 @@ app.post("/logout", (req: Request, res: Response) => {
 // user routes
 app.post("/users", createUser);
 app.get("/api/users", verifyToken, getAllUsers);
-app.get("/api/users/:id", verifyToken, getUserById);
+app.get("/api/users/me", verifyToken, getUserSelfInfo);
 app.put("/api/users/:id", verifyToken, updateUser);
 app.delete("/api/users/:id", verifyToken, deleteUser);
 app.put("/api/users/:id/progress", verifyToken, updateCardDifficulty);
