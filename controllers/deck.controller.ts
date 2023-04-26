@@ -23,7 +23,6 @@ export const createDeck = async (
     const deck: IDeck = new Deck({
       title: req.body.title,
       description: req.body.description,
-      collectionId: req.body.collectionId,
       cards: [],
     });
 
@@ -151,4 +150,41 @@ export const getRandomCardsFromDeck = async (
   }
 };
 
+export const createDecksAndCards = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const { decks } = req.body;
+    const createdDecks: IDeck[] = [];
+    const createdCards: ICard[] = [];
 
+    for (const deckData of decks) {
+      const deck: IDeck = new Deck({
+        title: deckData.title,
+        description: deckData.description,
+        cards: [],
+      });
+
+      const newDeck: IDeck = await deck.save();
+      createdDecks.push(newDeck);
+
+      for (const cardData of deckData.cards) {
+        const card: ICard = new Card({
+          deckId: newDeck._id,
+          question: cardData.question,
+          answer: cardData.answer,
+        });
+        const newCard: ICard = await card.save();
+        createdCards.push(newCard);
+        newDeck.cards.push(newCard._id);
+      }
+
+      await newDeck.save();
+    }
+
+    res.status(201).json({ decks: createdDecks, cards: createdCards });
+  } catch (err) {
+    res.status(500).send(err);
+  }
+};

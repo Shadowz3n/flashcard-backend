@@ -3,6 +3,7 @@ import { Card, ICard } from "../models/card.model";
 import { Deck } from "../models/deck.model";
 import { Document } from "mongoose";
 import { IDeck } from "../models/deck.model";
+import { User } from "../models/user.model";
 
 export const getAllCards = async (
   req: Request,
@@ -38,6 +39,52 @@ export const getAllCardsByDeckId = async (
     res.status(500).send(err);
   }
 };
+
+export const getAllCardsByDifficulty = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(401).send("Unauthorized");
+      return;
+    }
+    const currentDate = new Date();
+    const user = await User.findById(userId).exec();
+    const cards: ICard[] = await Card.find().exec();
+
+    const cardsByDifficulty = cards.reduce(
+      (acc: { difficulty: number; cards: ICard[] }[], card) => {
+        const userCard = user?.cards.find(
+          (userCard) => userCard.cardId.toString() === card.id.toString()
+        );
+        const difficulty = userCard
+          ? userCard.history
+              .filter((h) => h.date <= currentDate)
+              .sort((a, b) => b.date.getTime() - a.date.getTime())[0]
+              .userDifficulty
+          : 0;
+
+        const existingDifficulty = acc.find((c) => c.difficulty === difficulty);
+
+        if (existingDifficulty) {
+          existingDifficulty.cards.push(card);
+        } else {
+          acc.push({ difficulty, cards: [card] });
+        }
+
+        return acc;
+      },
+      []
+    );
+
+    res.status(200).json(cardsByDifficulty);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+};
+
 
 
 export const createCard = async (

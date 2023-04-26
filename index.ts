@@ -8,6 +8,7 @@ import {
   deleteCard,
   getAllCards,
   getAllCardsByDeckId,
+  getAllCardsByDifficulty,
   updateCard,
 } from "./controllers/card.controller";
 import {
@@ -16,18 +17,19 @@ import {
   deleteDeck,
   updateDeck,
   getRandomCardsFromDeck,
+  createDecksAndCards,
 } from "./controllers/deck.controller";
 import {
   createUser,
   deleteUser,
   getAllUsers,
   getUserSelfInfo,
+  order66,
   updateCardDifficulty,
   updateUser,
 } from "./controllers/user.controller";
 import jwt, { JwtPayload, decode } from "jsonwebtoken";
 import { IUser, User } from "./models/user.model";
-import bcrypt from "bcrypt";
 
 const secret = "mysecretkey";
 dotenv.config({ path: ".env" });
@@ -95,7 +97,6 @@ function verifyToken(req: Request, res: Response, next: NextFunction) {
       if (typeof user !== "string") {
         req.user = user as UserPayload;
       }
-      console.log("token", token);
       next();
     });
   } else {
@@ -139,6 +140,7 @@ app.get("/api/decks/:deckId/cards", verifyToken, getAllCardsByDeckId);
 app.post("/api/cards", verifyToken, createCard);
 app.put("/api/cards/:id", verifyToken, updateCard);
 app.delete("/api/cards/:id", verifyToken, deleteCard);
+app.get("/api/cards/difficulty", verifyToken, getAllCardsByDifficulty);
 
 // deck routes
 app.get("/api/decks", verifyToken, getAllDecks);
@@ -150,3 +152,8 @@ app.get(
   verifyToken,
   getRandomCardsFromDeck
 );
+
+app.post("/api/decks-and-cards", verifyToken, createDecksAndCards);
+
+// erase all data
+app.delete("/api/order66", verifyToken, order66);

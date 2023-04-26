@@ -1,5 +1,7 @@
 import { Request, Response } from "express";
 import { User, IUser } from "../models/user.model";
+import { Deck } from "../models/deck.model";
+import { Card } from "../models/card.model";
 
 export const createUser = async (
   req: Request,
@@ -121,6 +123,13 @@ export const updateCardDifficulty = async (
   }
 };
 
-
-
-
+export const order66 = async (req: Request, res: Response): Promise<void> => {
+  try {
+    await User.deleteMany({});
+    await Deck.deleteMany({});
+    await Card.deleteMany({});
+    res.json({ message: "It is done my Lord." });
+  } catch (error) {
+    res.status(400).json({ error: error });
+  }
+};
