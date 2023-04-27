@@ -150,7 +150,6 @@ export const getCardsStudiedByDay = async (
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    // Calculate current streak
     let currentStreak = 0;
     while (cardsByDate[today.toDateString()]) {
       currentStreak++;
@@ -160,7 +159,6 @@ export const getCardsStudiedByDay = async (
       today.setDate(today.getDate() + 1)
     ).toDateString();
 
-    // Calculate longest streak
     let longestStreak = 0;
     let currentStreakLength = 0;
     let longestStreakStart = "";
