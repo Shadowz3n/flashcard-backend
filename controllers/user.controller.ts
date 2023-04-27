@@ -130,13 +130,11 @@ export const getCardsStudiedByDay = async (
 ): Promise<void> => {
   try {
     const userId = req.user?.id;
-    console.log("userId", userId);
 
     const user: IUser | null = await User.findById(userId);
     if (!user) {
       throw new Error("User not found.");
     }
-    console.log("user", user);
 
     const cardsHistory = user.cards.flatMap((card) => card.history);
     const cardsByDate = groupBy(cardsHistory, (history) =>
