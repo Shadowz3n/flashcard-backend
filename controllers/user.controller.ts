@@ -147,7 +147,66 @@ export const getCardsStudiedByDay = async (
       };
     });
 
-    res.json(cardsStudiedByDay);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Calculate current streak
+    let currentStreak = 0;
+    while (cardsByDate[today.toDateString()]) {
+      currentStreak++;
+      today.setDate(today.getDate() - 1);
+    }
+    const currentStreakStart = new Date(
+      today.setDate(today.getDate() + 1)
+    ).toDateString();
+
+    // Calculate longest streak
+    let longestStreak = 0;
+    let currentStreakLength = 0;
+    let longestStreakStart = "";
+    let longestStreakEnd = "";
+    Object.keys(cardsByDate).forEach((date, index) => {
+      if (index === 0) {
+        currentStreakLength = 1;
+        longestStreakStart = date;
+      } else {
+        const currentDate = new Date(date);
+        const previousDate = new Date(Object.keys(cardsByDate)[index - 1]);
+        const timeDifference = today.getTime() - previousDate.getTime();
+        const daysDifference = timeDifference / (1000 * 3600 * 24);
+        if (daysDifference === 1) {
+          currentStreakLength++;
+        } else {
+          if (currentStreakLength > longestStreak) {
+            longestStreak = currentStreakLength;
+            longestStreakStart = new Date(
+              currentDate.getTime() -
+                (currentStreakLength - 1) * 24 * 60 * 60 * 1000
+            ).toDateString();
+            longestStreakEnd = new Date(previousDate).toDateString();
+          }
+          currentStreakLength = 1;
+        }
+      }
+    });
+    if (currentStreakLength > longestStreak) {
+      longestStreak = currentStreakLength;
+      longestStreakStart = new Date(
+        new Date().setDate(new Date().getDate() - currentStreakLength + 1)
+      ).toDateString();
+      longestStreakEnd =
+        Object.keys(cardsByDate)[Object.keys(cardsByDate).length - 1];
+    }
+
+    res.json({
+      cardsStudiedByDay,
+      currentStreak,
+      currentStreakStart,
+      longestStreak,
+      longestStreakStart,
+      longestStreakEnd,
+    });
+
   } catch (error) {
     res.status(400).json({ error: error });
   }
