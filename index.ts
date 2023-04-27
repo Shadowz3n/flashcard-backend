@@ -23,6 +23,7 @@ import {
   createUser,
   deleteUser,
   getAllUsers,
+  getCardsStudiedByDay,
   getUserSelfInfo,
   order66,
   updateCardDifficulty,
@@ -133,6 +134,7 @@ app.get("/api/users/me", verifyToken, getUserSelfInfo);
 app.put("/api/users/:id", verifyToken, updateUser);
 app.delete("/api/users/:id", verifyToken, deleteUser);
 app.put("/api/users/:id/progress", verifyToken, updateCardDifficulty);
+app.get("/api/users/cards-studied-by-day", verifyToken, getCardsStudiedByDay);
 
 // card routes
 app.get("/api/cards", verifyToken, getAllCards);

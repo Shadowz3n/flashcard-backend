@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { User, IUser } from "../models/user.model";
 import { Deck } from "../models/deck.model";
 import { Card } from "../models/card.model";
+import { groupBy } from "../utils/countCardsByDay";
 
 export const createUser = async (
   req: Request,
@@ -123,6 +124,37 @@ export const updateCardDifficulty = async (
   }
 };
 
+export const getCardsStudiedByDay = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    console.log("userId", userId);
+
+    const user: IUser | null = await User.findById(userId);
+    if (!user) {
+      throw new Error("User not found.");
+    }
+    console.log("user", user);
+
+    const cardsHistory = user.cards.flatMap((card) => card.history);
+    const cardsByDate = groupBy(cardsHistory, (history) =>
+      history.date.toDateString()
+    );
+    const cardsStudiedByDay = Object.keys(cardsByDate).map((date) => {
+      return {
+        date: date,
+        count: cardsByDate[date].length,
+      };
+    });
+
+    res.json(cardsStudiedByDay);
+  } catch (error) {
+    res.status(400).json({ error: error });
+  }
+};
+
 export const order66 = async (req: Request, res: Response): Promise<void> => {
   try {
     await User.deleteMany({});
@@ -133,3 +165,4 @@ export const order66 = async (req: Request, res: Response): Promise<void> => {
     res.status(400).json({ error: error });
   }
 };
+
