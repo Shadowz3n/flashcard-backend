@@ -20,6 +20,13 @@ export const getAllCardsByDeckId = async (
   res: Response
 ): Promise<void> => {
   try {
+    const userId = req.user?.id;
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(401).json({ error: "Access denied" });
+      return;
+    }
+    console.log(user);
     const { deckId } = req.params;
     const deck = await Deck.findById(deckId).lean().exec();
     if (!deck) {
@@ -29,10 +36,7 @@ export const getAllCardsByDeckId = async (
     const cardIds = deck.cards;
     const cards = await Card.find({ _id: { $in: cardIds } }).exec();
 
-    const deckTitle = deck.name;
-    const deckDescription = deck.description;
-
-    res.status(200).json({ deckTitle, deckDescription, cards });
+    res.status(200).json({ ...deck, cards: cards });
   } catch (err) {
     res.status(500).send(err);
   }
