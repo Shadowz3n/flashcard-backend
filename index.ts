@@ -8,7 +8,6 @@ import {
   deleteCard,
   getAllCards,
   getAllCardsByDeckId,
-  getAllCardsByDifficulty,
   updateCard,
 } from "./controllers/card.controller";
 import {
@@ -16,17 +15,14 @@ import {
   createDeck,
   deleteDeck,
   updateDeck,
-  getRandomCardsFromDeck,
   createDecksAndCards,
 } from "./controllers/deck.controller";
 import {
   createUser,
   deleteUser,
   getAllUsers,
-  getCardsStudiedByDay,
   getUserSelfInfo,
   order66,
-  updateCardDifficulty,
   updateUser,
 } from "./controllers/user.controller";
 import jwt, { JwtPayload, decode } from "jsonwebtoken";
@@ -133,8 +129,6 @@ app.get("/api/users", verifyToken, getAllUsers);
 app.get("/api/users/me", verifyToken, getUserSelfInfo);
 app.put("/api/users/:id", verifyToken, updateUser);
 app.delete("/api/users/:id", verifyToken, deleteUser);
-app.put("/api/users/:id/progress", verifyToken, updateCardDifficulty);
-app.get("/api/users/cards-studied-by-day", verifyToken, getCardsStudiedByDay);
 
 // card routes
 app.get("/api/cards", verifyToken, getAllCards);
@@ -142,18 +136,12 @@ app.get("/api/decks/:deckId/cards", verifyToken, getAllCardsByDeckId);
 app.post("/api/cards", verifyToken, createCard);
 app.put("/api/cards/:id", verifyToken, updateCard);
 app.delete("/api/cards/:id", verifyToken, deleteCard);
-app.get("/api/cards/difficulty", verifyToken, getAllCardsByDifficulty);
 
 // deck routes
 app.get("/api/decks", verifyToken, getAllDecks);
 app.post("/api/decks", verifyToken, createDeck);
 app.put("/api/decks/:id", verifyToken, updateDeck);
 app.delete("/api/decks/:id", verifyToken, deleteDeck);
-app.get(
-  "/api/decks/:deckId/cards/random/:quantity",
-  verifyToken,
-  getRandomCardsFromDeck
-);
 
 app.post("/api/decks-and-cards", verifyToken, createDecksAndCards);
 

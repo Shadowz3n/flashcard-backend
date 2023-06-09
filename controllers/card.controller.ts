@@ -1,8 +1,6 @@
 import { Request, Response } from "express";
 import { Card, ICard } from "../models/card.model";
 import { Deck } from "../models/deck.model";
-import { Document } from "mongoose";
-import { IDeck } from "../models/deck.model";
 import { User } from "../models/user.model";
 
 export const getAllCards = async (
@@ -31,7 +29,7 @@ export const getAllCardsByDeckId = async (
     const cardIds = deck.cards;
     const cards = await Card.find({ _id: { $in: cardIds } }).exec();
 
-    const deckTitle = deck.title;
+    const deckTitle = deck.name;
     const deckDescription = deck.description;
 
     res.status(200).json({ deckTitle, deckDescription, cards });
@@ -40,67 +38,29 @@ export const getAllCardsByDeckId = async (
   }
 };
 
-export const getAllCardsByDifficulty = async (
-  req: Request,
-  res: Response
-): Promise<void> => {
-  try {
-    const userId = req.user?.id;
-    if (!userId) {
-      res.status(401).send("Unauthorized");
-      return;
-    }
-    const currentDate = new Date();
-    const user = await User.findById(userId).exec();
-    const cards: ICard[] = await Card.find().exec();
-
-    const cardsByDifficulty = cards.reduce(
-      (acc: { difficulty: number; cards: ICard[] }[], card) => {
-        const userCard = user?.cards.find(
-          (userCard) => userCard.cardId.toString() === card.id.toString()
-        );
-        const difficulty = userCard
-          ? userCard.history
-              .filter((h) => h.date <= currentDate)
-              .sort((a, b) => b.date.getTime() - a.date.getTime())[0]
-              .userDifficulty
-          : 0;
-
-        const existingDifficulty = acc.find((c) => c.difficulty === difficulty);
-
-        if (existingDifficulty) {
-          existingDifficulty.cards.push(card);
-        } else {
-          acc.push({ difficulty, cards: [card] });
-        }
-
-        return acc;
-      },
-      []
-    );
-
-    res.status(200).json(cardsByDifficulty);
-  } catch (err) {
-    res.status(500).send(err);
-  }
-};
-
-
-
 export const createCard = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
+    const userId = req.user?.id;
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(401).json({ error: "Access denied" });
+      return;
+    }
     const { deckId, question, answer } = req.body;
     const deck = await Deck.findById(deckId);
     if (!deck) {
       res.status(404).json({ error: "Deck not found" });
       return;
     }
+    if (deck.cards === undefined) {
+      throw new Error("Deck cards array is undefined");
+    }
+
     const card: ICard = new Card({ deckId, question, answer });
     const newCard: ICard = await card.save();
-
     deck.cards.push(newCard._id);
     await deck.save();
     res.status(201).json(newCard);
