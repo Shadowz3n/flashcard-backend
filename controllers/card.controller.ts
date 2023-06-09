@@ -63,7 +63,12 @@ export const createCard = async (
       throw new Error("Deck cards array is undefined");
     }
 
-    const card: ICard = new Card({ deckId, question, answer });
+    const card: ICard = new Card({
+      deckId,
+      question,
+      answer,
+      createdBy: userId,
+    });
     const newCard: ICard = await card.save();
     deck.cards.push(newCard._id);
     await deck.save();
@@ -78,11 +83,19 @@ export const updateCard = async (
   res: Response
 ): Promise<void> => {
   try {
+    const cardId = req.params.id;
+    const updatedBy = req.user?.id;
+
     const updatedCard: ICard | null = await Card.findByIdAndUpdate(
-      req.params.id,
-      req.body,
+      cardId,
+      {
+        ...req.body,
+        updatedAt: new Date(),
+        updatedBy,
+      },
       { new: true }
     ).exec();
+
     if (updatedCard) {
       res.status(200).json(updatedCard);
     } else {

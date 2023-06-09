@@ -38,7 +38,16 @@ export const cardSchema: Schema = new mongoose.Schema({
 
   createdAt: { type: Date, default: Date.now },
 
-  updatedAt: { type: Date, default: Date.now },
+  createdBy: {
+    type: String,
+    required: [true, "Created by field is required."],
+  },
+
+  updatedAt: { type: Date, default: null },
+  updatedBy: {
+    type: String,
+    default: null,
+  },
 
   isAdded: { type: Boolean, default: true },
   category: { type: String, default: "uncategorized" },
