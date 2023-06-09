@@ -84,14 +84,14 @@ export const updateCard = async (
 ): Promise<void> => {
   try {
     const cardId = req.params.id;
-    const updatedBy = req.user?.id;
+    const userId = req.user?.id;
 
     const updatedCard: ICard | null = await Card.findByIdAndUpdate(
       cardId,
       {
         ...req.body,
         updatedAt: new Date(),
-        updatedBy,
+        updatedBy: userId,
       },
       { new: true }
     ).exec();
