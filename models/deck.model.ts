@@ -36,6 +36,11 @@ export const deckSchema: Schema = new mongoose.Schema({
     type: [String],
     default: [],
   },
+  updatedAt: { type: Date, default: null },
+  updatedBy: {
+    type: String,
+    default: null,
+  },
   category: { type: String, default: "uncategorized" },
   isPrivate: { type: Boolean, default: true },
   isAdded: { type: Boolean, default: true },

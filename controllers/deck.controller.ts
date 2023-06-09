@@ -46,9 +46,16 @@ export const updateDeck = async (
   res: Response
 ): Promise<void> => {
   try {
+    const userId = req.user?.id;
+    const deckId = req.params.id;
+
     const updatedDeck: IDeck | null = await Deck.findByIdAndUpdate(
-      req.params.id,
-      req.body,
+      deckId,
+      {
+        ...req.body,
+        updatedAt: new Date(),
+        updatedBy: userId,
+      },
       { new: true }
     ).exec();
     res.status(200).json(updatedDeck);
