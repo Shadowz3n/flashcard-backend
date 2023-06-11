@@ -61,7 +61,6 @@ export const updateUser = async (
         username,
         email,
         password,
-        // cards,
       },
       { new: true }
     );
