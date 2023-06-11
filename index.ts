@@ -15,7 +15,6 @@ import {
   createDeck,
   deleteDeck,
   updateDeck,
-  createDecksAndCards,
 } from "./controllers/deck.controller";
 import {
   createUser,
@@ -142,8 +141,6 @@ app.get("/api/decks", verifyToken, getAllDecks);
 app.post("/api/decks", verifyToken, createDeck);
 app.put("/api/decks/:id", verifyToken, updateDeck);
 app.delete("/api/decks/:id", verifyToken, deleteDeck);
-
-app.post("/api/decks-and-cards", verifyToken, createDecksAndCards);
 
 // erase all data
 app.delete("/api/order66", verifyToken, order66);
