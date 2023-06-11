@@ -124,7 +124,7 @@ app.post("/logout", (req: Request, res: Response) => {
 
 // user routes
 app.post("/users", createUser);
-app.get("/api/users", verifyToken, getAllUsers);
+app.get("/admin/users", verifyToken, getAllUsers);
 app.get("/api/users/me", verifyToken, getUserSelfInfo);
 app.put("/api/users/:id", verifyToken, updateUser);
 app.delete("/api/users/:id", verifyToken, deleteUser);

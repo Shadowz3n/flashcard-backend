@@ -9,11 +9,6 @@ export interface ICard extends Document {
   updatedAt: Date;
   updatedBy: string;
   category: string;
-
-  reviewHistory: {
-    date: Date;
-    direction: string;
-  }[];
   isAdded: boolean;
   isPrivate: boolean;
 }
