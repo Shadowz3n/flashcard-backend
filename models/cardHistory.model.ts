@@ -4,7 +4,7 @@ export interface ICardHistory extends Document {
   userId: string;
   cardId: string;
   date: Date;
-  direction: string;
+  direction: "left" | "right";
 }
 
 export const cardHistorySchema = new mongoose.Schema({
@@ -22,6 +22,7 @@ export const cardHistorySchema = new mongoose.Schema({
   },
   direction: {
     type: String,
+    enum: ["left", "right"],
     required: [true, "Direction field is required."],
   },
 });

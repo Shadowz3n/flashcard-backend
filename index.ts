@@ -26,6 +26,7 @@ import {
 } from "./controllers/user.controller";
 import jwt, { JwtPayload, decode } from "jsonwebtoken";
 import { IUser, User } from "./models/user.model";
+import { updateCardHistory } from "./controllers/cardHistory.controller";
 
 const secret = "mysecretkey";
 dotenv.config({ path: ".env" });
@@ -135,6 +136,9 @@ app.get("/api/decks/:deckId/cards", verifyToken, getAllCardsByDeckId);
 app.post("/api/cards", verifyToken, createCard);
 app.put("/api/cards/:id", verifyToken, updateCard);
 app.delete("/api/cards/:id", verifyToken, deleteCard);
+
+// cardHistory routes
+app.put("/api/cardHistory/:id", verifyToken, updateCardHistory);
 
 // deck routes
 app.get("/api/decks", verifyToken, getAllDecks);
