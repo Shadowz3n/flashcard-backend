@@ -26,7 +26,7 @@ export const getAllCardsByDeckId = async (
       res.status(401).json({ error: "Access denied" });
       return;
     }
-    console.log(user);
+
     const { deckId } = req.params;
     const deck = await Deck.findById(deckId).lean().exec();
     if (!deck) {
@@ -111,26 +111,21 @@ export const deleteCard = async (
   res: Response
 ): Promise<void> => {
   try {
-    const deletedCard: ICard | null = await Card.findByIdAndDelete(
-      req.params.id
-    ).exec();
-    if (deletedCard) {
-      const deckId = deletedCard.deckId;
-      const cardId = deletedCard._id;
-
+    const cardId = req.params.id;
+    const findCard: ICard | null = await Card.findByIdAndDelete(cardId).exec();
+    if (findCard) {
+      const deckId = findCard.deckId;
       const deck = await Deck.findById(deckId);
       if (!deck) {
         res.status(404).send("Deck not found");
         return;
       }
       await Deck.updateMany(
-        { cards: deletedCard._id },
-        { $pull: { cards: deletedCard._id } }
+        { cards: findCard._id },
+        { $pull: { cards: findCard._id } }
       ).exec();
 
-
-
-      res.status(200).json(deletedCard);
+      res.status(200).json(findCard);
     } else {
       res.status(404).send("Card not found");
     }
