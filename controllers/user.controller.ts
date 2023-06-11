@@ -16,7 +16,10 @@ export const createUser = async (
     });
     const savedUser = await user.save();
     res.json(savedUser);
-  } catch (error) {
+  } catch (error: any) {
+    if (error.code === 11000 && error.keyPattern && error.keyPattern.email === 1) {
+      res.status(400).json({ error: "Email already exists" });
+    } 
     res.status(400).json({ error: error });
   }
 };
