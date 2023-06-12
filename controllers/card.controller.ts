@@ -1,8 +1,8 @@
 import { Request, Response } from "express";
 import { Card, ICard } from "../models/card.model";
 import { Deck } from "../models/deck.model";
-import { Document } from "mongoose";
-import { IDeck } from "../models/deck.model";
+import { User } from "../models/user.model";
+import { CardHistory } from "../models/cardHistory.model";
 
 export const getAllCards = async (
   req: Request,
@@ -21,6 +21,13 @@ export const getAllCardsByDeckId = async (
   res: Response
 ): Promise<void> => {
   try {
+    const userId = req.user?.id;
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(401).json({ error: "Access denied" });
+      return;
+    }
+
     const { deckId } = req.params;
     const deck = await Deck.findById(deckId).lean().exec();
     if (!deck) {
@@ -30,30 +37,40 @@ export const getAllCardsByDeckId = async (
     const cardIds = deck.cards;
     const cards = await Card.find({ _id: { $in: cardIds } }).exec();
 
-    const deckTitle = deck.title;
-    const deckDescription = deck.description;
-
-    res.status(200).json({ deckTitle, deckDescription, cards });
+    res.status(200).json({ ...deck, cards: cards });
   } catch (err) {
     res.status(500).send(err);
   }
 };
-
 
 export const createCard = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
+    const userId = req.user?.id;
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(401).json({ error: "Access denied" });
+      return;
+    }
     const { deckId, question, answer } = req.body;
     const deck = await Deck.findById(deckId);
     if (!deck) {
       res.status(404).json({ error: "Deck not found" });
       return;
     }
-    const card: ICard = new Card({ deckId, question, answer });
-    const newCard: ICard = await card.save();
+    if (deck.cards === undefined) {
+      throw new Error("Deck cards array is undefined");
+    }
 
+    const card: ICard = new Card({
+      deckId,
+      question,
+      answer,
+      createdBy: userId,
+    });
+    const newCard: ICard = await card.save();
     deck.cards.push(newCard._id);
     await deck.save();
     res.status(201).json(newCard);
@@ -67,11 +84,19 @@ export const updateCard = async (
   res: Response
 ): Promise<void> => {
   try {
+    const cardId = req.params.id;
+    const userId = req.user?.id;
+
     const updatedCard: ICard | null = await Card.findByIdAndUpdate(
-      req.params.id,
-      req.body,
+      cardId,
+      {
+        ...req.body,
+        updatedAt: new Date(),
+        updatedBy: userId,
+      },
       { new: true }
     ).exec();
+
     if (updatedCard) {
       res.status(200).json(updatedCard);
     } else {
@@ -87,12 +112,11 @@ export const deleteCard = async (
   res: Response
 ): Promise<void> => {
   try {
-    const deletedCard: ICard | null = await Card.findByIdAndDelete(
-      req.params.id
-    ).exec();
-    if (deletedCard) {
-      const deckId = deletedCard.deckId;
-      const cardId = deletedCard._id;
+    const cardId = req.params.id;
+    const findCard: ICard | null = await Card.findByIdAndDelete(cardId).exec();
+    if (findCard) {
+      const deckId = findCard.deckId;
+      // await CardHistory.deleteMany({ cardId });
 
       const deck = await Deck.findById(deckId);
       if (!deck) {
@@ -100,13 +124,11 @@ export const deleteCard = async (
         return;
       }
       await Deck.updateMany(
-        { cards: deletedCard._id },
-        { $pull: { cards: deletedCard._id } }
+        { cards: findCard._id },
+        { $pull: { cards: findCard._id } }
       ).exec();
 
-
-
-      res.status(200).json(deletedCard);
+      res.status(200).json(findCard);
     } else {
       res.status(404).send("Card not found");
     }

@@ -4,11 +4,13 @@ export interface ICard extends Document {
   deckId: string;
   question: string;
   answer: string;
-  userDifficulty: number;
-  lastReviewed: Date;
   createdAt: Date;
+  createdBy: string;
   updatedAt: Date;
-  isFavorite: boolean;
+  updatedBy: string;
+  category: string;
+  isAdded: boolean;
+  isPrivate: boolean;
 }
 
 export const cardSchema: Schema = new mongoose.Schema({
@@ -29,20 +31,22 @@ export const cardSchema: Schema = new mongoose.Schema({
     minlength: [1, "Answer cannot be an empty string."],
   },
 
-  userDifficulty: {
-    type: Number,
-    default: 0,
-    min: [0, "User difficulty must be a number from 0 - 3."],
-    max: [3, "User difficulty must be a number from 0 - 3."],
-  },
-
-  lastReviewed: { type: Date },
-
   createdAt: { type: Date, default: Date.now },
 
-  updatedAt: { type: Date, default: Date.now },
+  createdBy: {
+    type: String,
+    required: [true, "Created by field is required."],
+  },
 
-  isFavorite: { type: Boolean, default: false },
+  updatedAt: { type: Date, default: null },
+  updatedBy: {
+    type: String,
+    default: null,
+  },
+
+  isAdded: { type: Boolean, default: true },
+  category: { type: String, default: "uncategorized" },
+  isPrivate: { type: Boolean, default: true },
 });
 
 export const Card = mongoose.model<ICard>("Card", cardSchema);

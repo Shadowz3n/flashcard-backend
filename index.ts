@@ -15,19 +15,21 @@ import {
   createDeck,
   deleteDeck,
   updateDeck,
-  getRandomCardsFromDeck,
 } from "./controllers/deck.controller";
 import {
   createUser,
   deleteUser,
   getAllUsers,
-  getUserById,
-  updateCardDifficulty,
+  getUserSelfInfo,
+  order66,
   updateUser,
 } from "./controllers/user.controller";
 import jwt, { JwtPayload, decode } from "jsonwebtoken";
 import { IUser, User } from "./models/user.model";
-import bcrypt from "bcrypt";
+import {
+  getCardsByDeckIdWithHistory,
+  updateCardHistory,
+} from "./controllers/cardHistory.controller";
 
 const secret = "mysecretkey";
 dotenv.config({ path: ".env" });
@@ -88,7 +90,6 @@ function verifyToken(req: Request, res: Response, next: NextFunction) {
 
   if (authHeader) {
     const token = authHeader.split(" ")[1];
-
     jwt.verify(token, secret, (err, user) => {
       if (err) {
         return res.sendStatus(403);
@@ -127,11 +128,10 @@ app.post("/logout", (req: Request, res: Response) => {
 
 // user routes
 app.post("/users", createUser);
-app.get("/api/users", verifyToken, getAllUsers);
-app.get("/api/users/:id", verifyToken, getUserById);
+app.get("/admin/users", verifyToken, getAllUsers);
+app.get("/api/users/me", verifyToken, getUserSelfInfo);
 app.put("/api/users/:id", verifyToken, updateUser);
 app.delete("/api/users/:id", verifyToken, deleteUser);
-app.put("/api/users/:id/progress", verifyToken, updateCardDifficulty);
 
 // card routes
 app.get("/api/cards", verifyToken, getAllCards);
@@ -140,13 +140,15 @@ app.post("/api/cards", verifyToken, createCard);
 app.put("/api/cards/:id", verifyToken, updateCard);
 app.delete("/api/cards/:id", verifyToken, deleteCard);
 
+// cardHistory routes
+app.put("/api/cardHistory/:id", verifyToken, updateCardHistory);
+app.get("/api/cardHistory/:deckId", verifyToken, getCardsByDeckIdWithHistory);
+
 // deck routes
 app.get("/api/decks", verifyToken, getAllDecks);
 app.post("/api/decks", verifyToken, createDeck);
 app.put("/api/decks/:id", verifyToken, updateDeck);
 app.delete("/api/decks/:id", verifyToken, deleteDeck);
-app.get(
-  "/api/decks/:deckId/cards/random/:quantity",
-  verifyToken,
-  getRandomCardsFromDeck
-);
+
+// erase all data
+app.delete("/api/order66", verifyToken, order66);
