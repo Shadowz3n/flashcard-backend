@@ -116,7 +116,7 @@ export const deleteCard = async (
     const findCard: ICard | null = await Card.findByIdAndDelete(cardId).exec();
     if (findCard) {
       const deckId = findCard.deckId;
-      await CardHistory.deleteMany({ cardId });
+      // await CardHistory.deleteMany({ cardId });
 
       const deck = await Deck.findById(deckId);
       if (!deck) {

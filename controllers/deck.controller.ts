@@ -76,7 +76,7 @@ export const deleteDeck = async (
 
     if (deletedDeck) {
       await Card.deleteMany({ deckId: deletedDeck._id });
-      await CardHistory.deleteMany({ cardId: { $in: deletedDeck.cards } });
+      // await CardHistory.deleteMany({ cardId: { $in: deletedDeck.cards } });
       res.status(200).json(deletedDeck);
     } else {
       res.status(404).send("Deck not found");
