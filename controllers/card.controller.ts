@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { Card, ICard } from "../models/card.model";
 import { Deck } from "../models/deck.model";
 import { User } from "../models/user.model";
+import { CardHistory } from "../models/cardHistory.model";
 
 export const getAllCards = async (
   req: Request,
@@ -115,6 +116,8 @@ export const deleteCard = async (
     const findCard: ICard | null = await Card.findByIdAndDelete(cardId).exec();
     if (findCard) {
       const deckId = findCard.deckId;
+      await CardHistory.deleteMany({ cardId });
+
       const deck = await Deck.findById(deckId);
       if (!deck) {
         res.status(404).send("Deck not found");
