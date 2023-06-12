@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import { Deck, IDeck } from "../models/deck.model";
 import { Card, ICard } from "../models/card.model";
 import { User } from "../models/user.model";
+import { CardHistory } from "../models/cardHistory.model";
 
 export const getAllDecks = async (
   req: Request,
@@ -75,6 +76,7 @@ export const deleteDeck = async (
 
     if (deletedDeck) {
       await Card.deleteMany({ deckId: deletedDeck._id });
+      await CardHistory.deleteMany({ cardId: { $in: deletedDeck.cards } });
       res.status(200).json(deletedDeck);
     } else {
       res.status(404).send("Deck not found");
