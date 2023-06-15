@@ -8,7 +8,6 @@ export interface ICard extends Document {
   createdBy: string;
   updatedAt: Date;
   updatedBy: string;
-  category: string;
   isAdded: boolean;
   isPrivate: boolean;
 }
@@ -45,7 +44,6 @@ export const cardSchema: Schema = new mongoose.Schema({
   },
 
   isAdded: { type: Boolean, default: true },
-  category: { type: String, default: "uncategorized" },
   isPrivate: { type: Boolean, default: true },
 });
 

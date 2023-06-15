@@ -2,6 +2,8 @@ import { Request, Response } from "express";
 import { User, IUser } from "../models/user.model";
 import { Deck } from "../models/deck.model";
 import { Card } from "../models/card.model";
+import { CardHistory } from "../models/cardHistory.model";
+import { calculateDailyStreak } from "../utils/dailyStreak";
 
 export const createUser = async (
   req: Request,
@@ -17,9 +19,13 @@ export const createUser = async (
     const savedUser = await user.save();
     res.json(savedUser);
   } catch (error: any) {
-    if (error.code === 11000 && error.keyPattern && error.keyPattern.email === 1) {
+    if (
+      error.code === 11000 &&
+      error.keyPattern &&
+      error.keyPattern.email === 1
+    ) {
       res.status(400).json({ error: "Email already exists" });
-    } 
+    }
     res.status(400).json({ error: error });
   }
 };
@@ -43,7 +49,13 @@ export const getUserSelfInfo = async (
   try {
     const userId = req.user?.id;
     const user = await User.findById(userId);
-    res.json(user);
+    if (!user) {
+      res.status(400).json({ error: "User not found" });
+      return;
+    }
+
+    const dailyStreak = await calculateDailyStreak(user._id);
+    res.status(200).json({ ...user?.toObject(), dailyStreak });
   } catch (error) {
     res.status(400).json({ error: error });
   }

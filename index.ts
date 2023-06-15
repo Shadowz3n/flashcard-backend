@@ -27,7 +27,9 @@ import {
 import jwt, { JwtPayload, decode } from "jsonwebtoken";
 import { IUser, User } from "./models/user.model";
 import {
+  getAllDecksWithHistory,
   getCardsByDeckIdWithHistory,
+  getRecentlyPlayedDecks,
   updateCardHistory,
 } from "./controllers/cardHistory.controller";
 
@@ -115,7 +117,6 @@ app.post("/login", async (req: Request, res: Response) => {
     return res.sendStatus(401);
   }
   const token = generateToken(user);
-
   res.json({ token });
 });
 app.post("/logout", (req: Request, res: Response) => {
@@ -128,7 +129,7 @@ app.post("/logout", (req: Request, res: Response) => {
 
 // user routes
 app.post("/users", createUser);
-app.get("/admin/users", verifyToken, getAllUsers);
+app.get("/api/users", verifyToken, getAllUsers);
 app.get("/api/users/me", verifyToken, getUserSelfInfo);
 app.put("/api/users/:id", verifyToken, updateUser);
 app.delete("/api/users/:id", verifyToken, deleteUser);
@@ -143,6 +144,8 @@ app.delete("/api/cards/:id", verifyToken, deleteCard);
 // cardHistory routes
 app.put("/api/cardHistory/:id", verifyToken, updateCardHistory);
 app.get("/api/cardHistory/:deckId", verifyToken, getCardsByDeckIdWithHistory);
+app.get("/api/cardHistory/decks/all", verifyToken, getAllDecksWithHistory);
+app.get("/api/cardHistory/decks/recent", verifyToken, getRecentlyPlayedDecks);
 
 // deck routes
 app.get("/api/decks", verifyToken, getAllDecks);
