@@ -29,9 +29,13 @@ import { IUser, User } from "./models/user.model";
 import {
   getAllDecksWithHistory,
   getCardsByDeckIdWithHistory,
-  getRecentlyPlayedDecks,
   updateCardHistory,
 } from "./controllers/cardHistory.controller";
+import { updateDeckHistory } from "./controllers/deckHistory.controller";
+import {
+  getAllUserDecksWithHistory,
+  getRecentlyPlayedDecks,
+} from "./controllers/userRoutes.controller";
 
 const secret = "mysecretkey";
 dotenv.config({ path: ".env" });
@@ -145,7 +149,14 @@ app.delete("/api/cards/:id", verifyToken, deleteCard);
 app.put("/api/cardHistory/:id", verifyToken, updateCardHistory);
 app.get("/api/cardHistory/:deckId", verifyToken, getCardsByDeckIdWithHistory);
 app.get("/api/cardHistory/decks/all", verifyToken, getAllDecksWithHistory);
-app.get("/api/cardHistory/decks/recent", verifyToken, getRecentlyPlayedDecks);
+// app.get("/api/cardHistory/decks/recent", verifyToken, getRecentlyPlayedDecks);
+
+// deckHistory routes
+app.put("/api/deckHistory/:deckId", verifyToken, updateDeckHistory);
+
+// userRoutes routes
+app.get("/api/userRoutes/decks/all", verifyToken, getAllUserDecksWithHistory);
+app.get("/api/userRoutes/recent", verifyToken, getRecentlyPlayedDecks);
 
 // deck routes
 app.get("/api/decks", verifyToken, getAllDecks);

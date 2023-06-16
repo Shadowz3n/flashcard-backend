@@ -27,7 +27,7 @@ export const createDeck = async (
       res.status(401).json({ error: "Access denied" });
       return;
     }
-    const { name, description } = req.body;
+    const { name, description, category } = req.body;
     const deck: IDeck = new Deck({
       name,
       description,

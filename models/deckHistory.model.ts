@@ -4,6 +4,7 @@ export interface IDeckHistory {
   userId: string;
   deckId: string;
   addedAt: boolean;
+  removedAt: boolean;
 }
 
 export const deckHistorySchema = new mongoose.Schema({
@@ -18,6 +19,10 @@ export const deckHistorySchema = new mongoose.Schema({
   addedAt: {
     type: Date,
     default: Date.now,
+  },
+  removedAt: {
+    type: Date,
+    default: null,
   },
 });
 

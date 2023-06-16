@@ -9,13 +9,10 @@ export const updateDeckHistory = async (
 ): Promise<void> => {
   try {
     const userId = req.user?.id;
-    const deckId = req.params.id;
-    const { isAdded } = req.body;
-
+    const deckId = req.params.deckId;
     const deckHistory = new DeckHistory({
       userId,
       deckId,
-      isAdded,
     });
 
     const savedDeckHistory = await deckHistory.save();
@@ -25,3 +22,4 @@ export const updateDeckHistory = async (
     res.status(400).json({ error: error });
   }
 };
+
