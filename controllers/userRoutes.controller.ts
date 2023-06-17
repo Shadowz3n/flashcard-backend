@@ -59,3 +59,34 @@ export const getRecentlyPlayedDecks = async (
     res.status(400).json({ error: error });
   }
 };
+
+export const getUnrelatedDecks = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(400).json({ error: "User not found" });
+      return;
+    }
+
+    const decks = await Deck.find({ createdBy: { $ne: userId } }).exec();
+    const deckIds = decks.map((deck) => deck._id.toString());
+
+    const deckHistory = await DeckHistory.find({
+      userId,
+      deckId: { $in: deckIds },
+    }).exec();
+    const filteredDecks = decks.filter((deck) => {
+      const deckHistoryEntry = deckHistory.find(
+        (entry) => entry.deckId === deck._id.toString()
+      );
+      return !deckHistoryEntry || !deckHistoryEntry.addedAt;
+    });
+
+    res.status(200).json(filteredDecks);
+  } catch (error) {
+    res.status(400).json({ error: error });
+  }
+};
