@@ -4,6 +4,7 @@ import { CardHistory } from "../models/cardHistory.model";
 import { Card } from "../models/card.model";
 import { DeckHistory } from "../models/deckHistory.model";
 import { addCardHistory } from "../utils/addCardHistory";
+import { IUser, User } from "../models/user.model";
 
 export const getAllUserDecksWithHistory = async (
   req: Request,
@@ -78,6 +79,7 @@ export const getUnrelatedDecks = async (
       userId,
       deckId: { $in: deckIds },
     }).exec();
+
     const filteredDecks = decks.filter((deck) => {
       const deckHistoryEntry = deckHistory.find(
         (entry) => entry.deckId === deck._id.toString()
@@ -85,7 +87,67 @@ export const getUnrelatedDecks = async (
       return !deckHistoryEntry || !deckHistoryEntry.addedAt;
     });
 
-    res.status(200).json(filteredDecks);
+    const updatedDecks = await Promise.all(
+      filteredDecks.map(async (deck) => {
+        const createdUser: IUser | null = await User.findById(
+          deck.createdBy
+        ).exec();
+        const createdByName = createdUser ? createdUser.username : "";
+        return {
+          ...deck.toObject(),
+          createdByName,
+        };
+      })
+    );
+
+    res.status(200).json(updatedDecks);
+  } catch (error) {
+    res.status(400).json({ error: error });
+  }
+};
+
+export const listActivities = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(400).json({ error: "User not found" });
+      return;
+    }
+
+    const userDecks = await Deck.find({ createdBy: userId }).exec();
+    const deckIds = userDecks.map((deck) => deck._id.toString());
+
+    const deckActivities = await DeckHistory.find({ deckId: { $in: deckIds } })
+      .populate("userId", "username")
+      .exec();
+
+    const activities = await Promise.all(
+      deckActivities.map(async (activity) => {
+        const addedBy: IUser | null = await User.findById(
+          activity.userId
+        ).exec();
+        return {
+          deckId: activity.deckId,
+          addedBy: addedBy ? { id: addedBy._id, name: addedBy.username } : null,
+          addedAt: activity.addedAt,
+          removedAt: activity.removedAt,
+        };
+      })
+    );
+
+    const decksWithActivities = userDecks
+      .map((deck) => ({
+        ...deck.toObject(),
+        activities: activities.filter(
+          (activity) => activity.deckId === deck._id.toString()
+        ),
+      }))
+      .filter((deck) => deck.activities.length > 0);
+
+    res.status(200).json(decksWithActivities);
   } catch (error) {
     res.status(400).json({ error: error });
   }

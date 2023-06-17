@@ -36,6 +36,7 @@ import {
   getAllUserDecksWithHistory,
   getRecentlyPlayedDecks,
   getUnrelatedDecks,
+  listActivities,
 } from "./controllers/userRoutes.controller";
 
 const secret = "mysecretkey";
@@ -159,6 +160,7 @@ app.put("/api/deckHistory/:deckId", verifyToken, updateDeckHistory);
 app.get("/api/userRoutes/decks/all", verifyToken, getAllUserDecksWithHistory);
 app.get("/api/userRoutes/recent", verifyToken, getRecentlyPlayedDecks);
 app.get("/api/userRoutes/decks/unrelated", verifyToken, getUnrelatedDecks);
+app.get("/api/userRoutes/activities", verifyToken, listActivities);
 
 // deck routes
 app.get("/api/decks", verifyToken, getAllDecks);
