@@ -5,6 +5,7 @@ import { Card } from "../models/card.model";
 import { DeckHistory } from "../models/deckHistory.model";
 import { addCardHistory } from "../utils/addCardHistory";
 import { IUser, User } from "../models/user.model";
+import { differenceInDays, formatISO } from "date-fns";
 
 export const getAllUserDecksWithHistory = async (
   req: Request,
@@ -52,7 +53,6 @@ export const getAllUserDecksWithHistory = async (
     res.status(400).json({ error: error });
   }
 };
-
 
 export const getRecentlyPlayedDecks = async (
   req: Request,
@@ -177,30 +177,69 @@ export const getUserProgress = async (
   try {
     const userId = req.user?.id;
 
-    // Get the user's created and added deck IDs from the deck history
     const deckHistory = await DeckHistory.find({ userId }).exec();
     const deckIds = deckHistory.map((history) => history.deckId);
 
-    // Get the decks based on the deck IDs
     const decks = await Deck.find({
       $or: [{ createdBy: userId }, { _id: { $in: deckIds } }],
     }).exec();
 
-    // Get the card IDs from the decks
     const cardIds = decks.flatMap((deck) => deck.cards);
 
-    // Get the total number of available cards
     const totalCards = await Card.countDocuments({
       _id: { $in: cardIds },
     }).exec();
 
-    // Get the number of played cards by the user
     const playedCards = await CardHistory.countDocuments({
       userId,
       cardId: { $in: cardIds },
     }).exec();
 
-    res.status(200).json({ playedCards, totalCards });
+    const cardHistories = await CardHistory.find({ userId }).exec();
+
+    let currentStreak = 0;
+    let longestStreak = 0;
+    let consecutiveDays = 0;
+    let previousDate: Date | null = null;
+
+    cardHistories.forEach((history) => {
+      const currentDate = new Date(history.date);
+      if (previousDate) {
+        const previousDateStr = formatISO(previousDate, {
+          representation: "date",
+        });
+        const currentDateStr = formatISO(currentDate, {
+          representation: "date",
+        });
+        const diffInDays = differenceInDays(
+          new Date(currentDateStr),
+          new Date(previousDateStr)
+        );
+        if (diffInDays === 1) {
+          consecutiveDays++;
+        } else {
+          consecutiveDays = 0;
+        }
+      }
+      previousDate = currentDate;
+
+      if (consecutiveDays > longestStreak) {
+        longestStreak = consecutiveDays;
+      }
+    });
+
+    const userProgress = {
+      progress: {
+        playedCards,
+        totalCards,
+      },
+      streak: {
+        currentStreak,
+        longestStreak,
+      },
+    };
+
+    res.status(200).json(userProgress);
   } catch (error) {
     res.status(400).json({ error: error });
   }
