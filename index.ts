@@ -31,7 +31,10 @@ import {
   getCardsByDeckIdWithHistory,
   updateCardHistory,
 } from "./controllers/cardHistory.controller";
-import { updateDeckHistory } from "./controllers/deckHistory.controller";
+import {
+  addDeckHistory,
+  removeDeckHistory,
+} from "./controllers/deckHistory.controller";
 import {
   getAllUserDecksWithHistory,
   getRecentlyPlayedDecks,
@@ -154,7 +157,8 @@ app.get("/api/cardHistory/decks/all", verifyToken, getAllDecksWithHistory);
 // app.get("/api/cardHistory/decks/recent", verifyToken, getRecentlyPlayedDecks);
 
 // deckHistory routes
-app.put("/api/deckHistory/:deckId", verifyToken, updateDeckHistory);
+app.post("/api/deckHistory/:deckId", verifyToken, addDeckHistory);
+app.delete("/api/deckHistory/:deckId", verifyToken, removeDeckHistory);
 
 // userRoutes routes
 app.get("/api/userRoutes/decks/all", verifyToken, getAllUserDecksWithHistory);

@@ -31,11 +31,28 @@ export const getAllUserDecksWithHistory = async (
 
     const decksWithUserCardHistory = await addCardHistory(joinedDecks, userId);
 
-    res.status(200).json(decksWithUserCardHistory);
+    const updatedDecks = await Promise.all(
+      decksWithUserCardHistory.map(async (deck) => {
+        if (deck.createdBy !== userId) {
+          const createdUser: IUser | null = await User.findById(
+            deck.createdBy
+          ).exec();
+          const createdByName = createdUser ? createdUser.username : "";
+          return {
+            ...deck,
+            createdByName,
+          };
+        }
+        return deck;
+      })
+    );
+
+    res.status(200).json(updatedDecks);
   } catch (error) {
     res.status(400).json({ error: error });
   }
 };
+
 
 export const getRecentlyPlayedDecks = async (
   req: Request,
