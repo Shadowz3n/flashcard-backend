@@ -169,3 +169,39 @@ export const listActivities = async (
     res.status(400).json({ error: error });
   }
 };
+
+export const getUserProgress = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+
+    // Get the user's created and added deck IDs from the deck history
+    const deckHistory = await DeckHistory.find({ userId }).exec();
+    const deckIds = deckHistory.map((history) => history.deckId);
+
+    // Get the decks based on the deck IDs
+    const decks = await Deck.find({
+      $or: [{ createdBy: userId }, { _id: { $in: deckIds } }],
+    }).exec();
+
+    // Get the card IDs from the decks
+    const cardIds = decks.flatMap((deck) => deck.cards);
+
+    // Get the total number of available cards
+    const totalCards = await Card.countDocuments({
+      _id: { $in: cardIds },
+    }).exec();
+
+    // Get the number of played cards by the user
+    const playedCards = await CardHistory.countDocuments({
+      userId,
+      cardId: { $in: cardIds },
+    }).exec();
+
+    res.status(200).json({ playedCards, totalCards });
+  } catch (error) {
+    res.status(400).json({ error: error });
+  }
+};

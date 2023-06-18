@@ -39,6 +39,7 @@ import {
   getAllUserDecksWithHistory,
   getRecentlyPlayedDecks,
   getUnrelatedDecks,
+  getUserProgress,
   listActivities,
 } from "./controllers/userRoutes.controller";
 
@@ -165,6 +166,7 @@ app.get("/api/userRoutes/decks/all", verifyToken, getAllUserDecksWithHistory);
 app.get("/api/userRoutes/recent", verifyToken, getRecentlyPlayedDecks);
 app.get("/api/userRoutes/decks/unrelated", verifyToken, getUnrelatedDecks);
 app.get("/api/userRoutes/activities", verifyToken, listActivities);
+app.get("/api/userRoutes/progress", verifyToken, getUserProgress);
 
 // deck routes
 app.get("/api/decks", verifyToken, getAllDecks);
