@@ -1,11 +1,19 @@
 import { Request, Response } from "express";
 import { Deck } from "../models/deck.model";
-import { CardHistory } from "../models/cardHistory.model";
+import { CardHistory, ICardHistory } from "../models/cardHistory.model";
 import { Card } from "../models/card.model";
 import { DeckHistory } from "../models/deckHistory.model";
 import { addCardHistory } from "../utils/addCardHistory";
 import { IUser, User } from "../models/user.model";
-import { differenceInDays, formatISO } from "date-fns";
+import {
+  differenceInDays,
+  formatISO,
+  isSameDay,
+  isToday,
+  subDays,
+} from "date-fns";
+import { calculateCardScore } from "../utils/calculateCardScore";
+import { weightedRandomSwap } from "../utils/randomizeWithScore";
 
 export const getAllUserDecksWithHistory = async (
   req: Request,
@@ -190,41 +198,61 @@ export const getUserProgress = async (
       _id: { $in: cardIds },
     }).exec();
 
-    const playedCards = await CardHistory.countDocuments({
-      userId,
-      cardId: { $in: cardIds },
+    const cardHistories = await CardHistory.find({ userId })
+      .sort({ date: "desc" })
+      .exec();
+    const playedCardIds = [
+      ...new Set(cardHistories.map((history) => history.cardId)),
+    ];
+    let playedCards = 0;
+
+    const relatedDecks = await Deck.find({
+      $or: [{ createdBy: userId }, { _id: { $in: deckIds } }],
     }).exec();
 
-    const cardHistories = await CardHistory.find({ userId }).exec();
+    playedCardIds.forEach((cardId) => {
+      const isCardRelated = relatedDecks.some((deck) =>
+        deck.cards.includes(cardId)
+      );
+      if (isCardRelated) {
+        playedCards++;
+      }
+    });
+
+    const lastCardHistory = cardHistories[0];
+    if (lastCardHistory && lastCardHistory.direction === "right") {
+      playedCards++;
+    }
 
     let currentStreak = 0;
     let longestStreak = 0;
     let consecutiveDays = 0;
     let previousDate: Date | null = null;
 
+    function isPreviousDay(date1: Date, date2: Date): boolean {
+      const previousDate = subDays(date1, 1);
+      return isSameDay(previousDate, date2);
+    }
+
     cardHistories.forEach((history) => {
       const currentDate = new Date(history.date);
       if (previousDate) {
-        const previousDateStr = formatISO(previousDate, {
-          representation: "date",
-        });
-        const currentDateStr = formatISO(currentDate, {
-          representation: "date",
-        });
-        const diffInDays = differenceInDays(
-          new Date(currentDateStr),
-          new Date(previousDateStr)
-        );
-        if (diffInDays === 1) {
+        const isConsecutiveDay = isPreviousDay(previousDate, currentDate);
+        if (isConsecutiveDay) {
           consecutiveDays++;
         } else {
-          consecutiveDays = 0;
+          consecutiveDays = 1;
         }
+      } else {
+        consecutiveDays = 1;
       }
       previousDate = currentDate;
 
       if (consecutiveDays > longestStreak) {
         longestStreak = consecutiveDays;
+      }
+      if (isToday(currentDate)) {
+        currentStreak = consecutiveDays;
       }
     });
 
@@ -240,6 +268,92 @@ export const getUserProgress = async (
     };
 
     res.status(200).json(userProgress);
+  } catch (error) {
+    res.status(400).json({ error: error });
+  }
+};
+
+export const generateCards = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) {
+      res.status(400).json({ error: "User not found" });
+      return;
+    }
+
+    const { deckId } = req.params;
+    const deck = await Deck.findById(deckId).lean().exec();
+    if (!deck) {
+      res.status(404).json({ error: "Deck not found" });
+      return;
+    }
+
+    const cardIds = deck.cards;
+    const cardHistoryPromises = cardIds.map((cardId) =>
+      CardHistory.find({ userId, cardId }).exec()
+    );
+    const cardHistories = await Promise.all(cardHistoryPromises);
+    const flattenedHistories = cardHistories.flat();
+
+    const cardIdsWithRating = calculateCardScore(flattenedHistories, cardIds);
+
+    const cardRatings = cardIds.map((cardId) => ({
+      cardId,
+      rating: cardIdsWithRating[cardId],
+    }));
+
+    const sortedCards = cardRatings.sort((a, b) => b.rating - a.rating);
+
+    const sumOfRatings = sortedCards.reduce(
+      (sum, card) => sum + card.rating,
+      0
+    );
+
+    let lowerRange = 0;
+    const weightedCards = sortedCards.map((card) => {
+      const upperRange = lowerRange + card.rating / sumOfRatings;
+      const weightedCard = {
+        cardId: card.cardId,
+        weight: upperRange - lowerRange,
+      };
+      lowerRange = upperRange;
+      return weightedCard;
+    });
+
+    for (let i = weightedCards.length - 1; i > 0; i--) {
+      const j = weightedRandomSwap(i + 1, weightedCards);
+      [weightedCards[i], weightedCards[j]] = [
+        weightedCards[j],
+        weightedCards[i],
+      ];
+    }
+
+    const studyCards = weightedCards
+      .slice(0, 10)
+      .map((weightedCard) => weightedCard.cardId);
+
+    console.log("studyCards", studyCards, weightedCards);
+
+    const findCards = await Card.find({ _id: { $in: studyCards } }).exec();
+
+    const cards = findCards.map((card) => {
+      const history = flattenedHistories
+        .filter((ch) => ch.cardId === card._id.toString())
+        .map((ch) => ({
+          date: ch.date,
+          direction: ch.direction,
+        }));
+
+      return {
+        ...card.toObject(),
+        history: history || [],
+      };
+    });
+
+    res.status(200).json({ deckId, cards });
   } catch (error) {
     res.status(400).json({ error: error });
   }

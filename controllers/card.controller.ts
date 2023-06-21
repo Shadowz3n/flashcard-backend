@@ -79,6 +79,49 @@ export const createCard = async (
   }
 };
 
+export const createMultipleCards = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const userId = req.user?.id;
+    const user = await User.findById(userId);
+    if (!user) {
+      res.status(401).json({ error: "Access denied" });
+      return;
+    }
+
+    const { deckId, cards } = req.body;
+    const deck = await Deck.findById(deckId);
+    if (!deck) {
+      res.status(404).json({ error: "Deck not found" });
+      return;
+    }
+    if (deck.cards === undefined) {
+      throw new Error("Deck cards array is undefined");
+    }
+
+    const createdCards: ICard[] = [];
+    for (const { question, answer } of cards) {
+      const card: ICard = new Card({
+        deckId,
+        question,
+        answer,
+        createdBy: userId,
+      });
+      const newCard: ICard = await card.save();
+      deck.cards.push(newCard._id);
+      createdCards.push(newCard);
+    }
+
+    await deck.save();
+    res.status(201).json(createdCards);
+  } catch (err) {
+    res.status(500).send(err);
+  }
+};
+
+
 export const updateCard = async (
   req: Request,
   res: Response

@@ -5,6 +5,7 @@ import mongoose from "mongoose";
 import dotenv from "dotenv";
 import {
   createCard,
+  createMultipleCards,
   deleteCard,
   getAllCards,
   getAllCardsByDeckId,
@@ -36,6 +37,7 @@ import {
   removeDeckHistory,
 } from "./controllers/deckHistory.controller";
 import {
+  generateCards,
   getAllUserDecksWithHistory,
   getRecentlyPlayedDecks,
   getUnrelatedDecks,
@@ -148,6 +150,7 @@ app.delete("/api/users/:id", verifyToken, deleteUser);
 app.get("/api/cards", verifyToken, getAllCards);
 app.get("/api/decks/:deckId/cards", verifyToken, getAllCardsByDeckId);
 app.post("/api/cards", verifyToken, createCard);
+app.post("/api/cards/multiple", verifyToken, createMultipleCards);
 app.put("/api/cards/:id", verifyToken, updateCard);
 app.delete("/api/cards/:id", verifyToken, deleteCard);
 
@@ -155,7 +158,6 @@ app.delete("/api/cards/:id", verifyToken, deleteCard);
 app.put("/api/cardHistory/:id", verifyToken, updateCardHistory);
 app.get("/api/cardHistory/:deckId", verifyToken, getCardsByDeckIdWithHistory);
 app.get("/api/cardHistory/decks/all", verifyToken, getAllDecksWithHistory);
-// app.get("/api/cardHistory/decks/recent", verifyToken, getRecentlyPlayedDecks);
 
 // deckHistory routes
 app.post("/api/deckHistory/:deckId", verifyToken, addDeckHistory);
@@ -167,6 +169,7 @@ app.get("/api/userRoutes/recent", verifyToken, getRecentlyPlayedDecks);
 app.get("/api/userRoutes/decks/unrelated", verifyToken, getUnrelatedDecks);
 app.get("/api/userRoutes/activities", verifyToken, listActivities);
 app.get("/api/userRoutes/progress", verifyToken, getUserProgress);
+app.get("/api/generate/:deckId", verifyToken, generateCards);
 
 // deck routes
 app.get("/api/decks", verifyToken, getAllDecks);
