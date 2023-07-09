@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  backend-qbank:
+    container_name: flashcard-backend
+    image: flashcard-backend:latest
+    restart: unless-stopped
+    env_file:
+      - .env
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runner
+      tags:
+        - flashcard-backend:latest
+    ports:
+      - $PORT:$PORT
