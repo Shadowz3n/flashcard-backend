@@ -1,4 +1,4 @@
-name = "flashcard-backend"
+name = "flashcard-ii-backend"
 main = "./index.ts"
-compatibility_date = "2023-04-11"
+compatibility_date = "2023-07-09"
 node_compat = true

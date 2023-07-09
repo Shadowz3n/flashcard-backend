@@ -2,7 +2,7 @@
 /dist
 /uploads/*.xlsx
 db.sqlite
-
+wrangler.toml
 coverage
 #ides
 
