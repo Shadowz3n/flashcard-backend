@@ -335,7 +335,6 @@ export const generateCards = async (
       .slice(0, 10)
       .map((weightedCard) => weightedCard.cardId);
 
-    console.log("studyCards", studyCards, weightedCards);
 
     const findCards = await Card.find({ _id: { $in: studyCards } }).exec();
 
